@@ -6,95 +6,102 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
-public class MainMenuScript : MonoBehaviourPunCallbacks
+
+namespace Theactualgame.Menus
 {
-    [SerializeField] private GameObject findOpponentPanel = null;
-    [SerializeField] private GameObject waitingStatusPanel = null;
-    [SerializeField] private TextMeshProUGUI waitingStatusText = null;
 
-    private bool isConnecting = false;
-
-    private const string GameVersion = "0.1";
-    private const int MaxPlayersPerRoom = 2;
-
-    // all players in the lobby needs to be synced
-    private void Awake() => PhotonNetwork.AutomaticallySyncScene = true;
-
-    public void FindOpponent()
+    public class MainMenuScript : MonoBehaviourPunCallbacks
     {
-        isConnecting = true;
+        [SerializeField] private GameObject findOpponentPanel = null;
+        [SerializeField] private GameObject waitingStatusPanel = null;
+        [SerializeField] private TextMeshProUGUI waitingStatusText = null;
 
-        findOpponentPanel.SetActive(false);
-        waitingStatusPanel.SetActive(true);
+        private bool isConnecting = false;
 
-        waitingStatusText.text = "Searching...";
+        private const string GameVersion = "0.1";
+        private const int MaxPlayersPerRoom = 2;
 
-        if (PhotonNetwork.IsConnected)
+        // all players in the lobby needs to be synced
+        private void Awake() => PhotonNetwork.AutomaticallySyncScene = true;
+
+        public void FindOpponent()
         {
-            PhotonNetwork.JoinRandomRoom();
+            isConnecting = true;
+
+            findOpponentPanel.SetActive(false);
+            waitingStatusPanel.SetActive(true);
+
+            waitingStatusText.text = "Searching...";
+
+            if (PhotonNetwork.IsConnected)
+            {
+                PhotonNetwork.JoinRandomRoom();
+            }
+            else
+            {
+                PhotonNetwork.GameVersion = GameVersion;
+                PhotonNetwork.ConnectUsingSettings();
+            }
         }
-        else
+
+        public override void OnConnectedToMaster()
         {
-            PhotonNetwork.GameVersion = GameVersion;
-            PhotonNetwork.ConnectUsingSettings();
+            Debug.Log("Connected To Master");
+
+            if (isConnecting)
+            {
+                PhotonNetwork.JoinRandomRoom();
+            }
         }
-    }
 
-    public override void OnConnectedToMaster()
-    {
-        Debug.Log("Connected To Master");
-
-        if (isConnecting)
+        public override void OnDisconnected(DisconnectCause cause)
         {
-            PhotonNetwork.JoinRandomRoom();
+            waitingStatusPanel.SetActive(false);
+            findOpponentPanel.SetActive(true);
+
+            Debug.Log($"Disconnected due to: {cause}");
+
+
         }
-    }
 
-    public override void OnDisconnected(DisconnectCause cause)
-    {
-        waitingStatusPanel.SetActive(false);
-        findOpponentPanel.SetActive(true);
-
-        Debug.Log($"Disconnected due to: {cause}");
-
-
-    }
-
-    public override void OnJoinRandomFailed(short returnCode, string message)
-    {
-        Debug.Log("No Clients are waiting for an opponent, creatng new room!");
-
-        PhotonNetwork.CreateRoom(null, new RoomOptions { MaxPlayers = MaxPlayersPerRoom });
-    }
-
-    public override void OnJoinedRoom()
-    {
-        Debug.Log("Client Successfully joined a room");
-
-        int playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
-
-        if (playerCount != MaxPlayersPerRoom)
+        public override void OnJoinRandomFailed(short returnCode, string message)
         {
-            waitingStatusText.text = "Waiting for opponent";
-            Debug.Log("Client is waiting for an opponent");
+            Debug.Log("No Clients are waiting for an opponent, creatng new room!");
+
+            PhotonNetwork.CreateRoom(null, new RoomOptions { MaxPlayers = MaxPlayersPerRoom });
         }
-        else
+
+        public override void OnJoinedRoom()
         {
-            waitingStatusText.text = "Opponent Found!";
-            Debug.Log("Match is ready to begin!");
+            Debug.Log("Client Successfully joined a room");
+
+            int playerCount = PhotonNetwork.CurrentRoom.PlayerCount;
+
+            if (playerCount != MaxPlayersPerRoom)
+            {
+                waitingStatusText.text = "Waiting for opponent";
+                Debug.Log("Client is waiting for an opponent");
+            }
+            else
+            {
+                waitingStatusText.text = "Opponent Found!";
+                Debug.Log("Match is ready to begin!");
+            }
         }
-    }
 
-    public override void OnPlayerEnteredRoom(Player newPlayer)
-    {
-        if(PhotonNetwork.CurrentRoom.PlayerCount == MaxPlayersPerRoom)
+        public override void OnPlayerEnteredRoom(Player newPlayer)
         {
-            PhotonNetwork.CurrentRoom.IsOpen = false;
+            if (PhotonNetwork.CurrentRoom.PlayerCount == MaxPlayersPerRoom)
+            {
+                PhotonNetwork.CurrentRoom.IsOpen = false;
 
-            waitingStatusText.text = "Opponent Found!";
-            Debug.Log("Match is ready to begin");
+                waitingStatusText.text = "Opponent Found!";
+                Debug.Log("Match is ready to begin");
 
-            PhotonNetwork.LoadLevel("Scene_Main");
+                PhotonNetwork.LoadLevel("Scene_Main");
+            }
         }
     }
 }
+
+

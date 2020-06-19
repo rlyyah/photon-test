@@ -3,39 +3,46 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerNameInput : MonoBehaviour
+
+namespace Theactualgame.Menus
 {
-    [SerializeField] private TMP_InputField nameInputField = null;
-    [SerializeField] private Button continueButton = null;
-
-    private const string PlayerPrefsNamesKey = "PlayerName";
-
-    private void Start() => SetUpInputField();
-
-    private void SetUpInputField()
+    public class PlayerNameInput : MonoBehaviour
     {
-        if(!PlayerPrefs.HasKey(PlayerPrefsNamesKey)) { return; }
+        [SerializeField] private TMP_InputField nameInputField = null;
+        [SerializeField] private Button continueButton = null;
 
-        string defaultName = PlayerPrefs.GetString(PlayerPrefsNamesKey);
+        private const string PlayerPrefsNamesKey = "PlayerName";
 
-        nameInputField.text = defaultName;
+        private void Start() => SetUpInputField();
 
-        SetPlayerName(defaultName);
-    }
+        private void SetUpInputField()
+        {
+            if (!PlayerPrefs.HasKey(PlayerPrefsNamesKey)) { return; }
 
-    public void SetPlayerName(string name)
-    {
+            string defaultName = PlayerPrefs.GetString(PlayerPrefsNamesKey);
 
-        //continueButton.interactable = !string.IsNullOrEmpty(name);
-        continueButton.interactable = !string.IsNullOrEmpty(nameInputField.text);
-    }
-     
-    public void SavePlayerName()
-    {
-        string playerName = nameInputField.text;
+            nameInputField.text = defaultName;
 
-        PhotonNetwork.NickName = playerName;
+            SetPlayerName(defaultName);
+        }
 
-        PlayerPrefs.SetString(PlayerPrefsNamesKey, playerName);
+        public void SetPlayerName(string name)
+        {
+
+            //continueButton.interactable = !string.IsNullOrEmpty(name);
+            continueButton.interactable = !string.IsNullOrEmpty(nameInputField.text);
+        }
+
+        public void SavePlayerName()
+        {
+            string playerName = nameInputField.text;
+
+            PhotonNetwork.NickName = playerName;
+
+            PlayerPrefs.SetString(PlayerPrefsNamesKey, playerName);
+        }
     }
 }
+
+
+
